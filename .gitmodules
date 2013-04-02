@@ -1,0 +1,3 @@
+[submodule "openphoto"]
+	path = openphoto
+	url = git@github.com:photo/openphoto-python.git
