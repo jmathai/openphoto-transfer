@@ -48,7 +48,7 @@ if credentialConfig.has_section('credentials'):
   k.set_acl('public-read')
 
   """ gearman client """
-  gearmanClient = gearman.GearmanClient(['localhost:4730'])
+  gearmanClient = gearman.GearmanClient(['%s:%s' % (gearmanConfig.get('gearman','host'), gearmanConfig.get('gearman','port'))])
   workload = {
       'op_host':credentialConfig.get('credentials','host'),
       'op_ckey':credentialConfig.get('credentials','consumerKey'),
