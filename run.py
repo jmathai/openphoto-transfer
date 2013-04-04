@@ -11,8 +11,26 @@ import gearman
 import json
 import boto.s3
 import boto.s3.key
+import magic
 
 _, path, file, credentialFile, logFile, gearmanFile, awsFile = argv
+filePath = '%s/%s' % (path, file)
+
+""" open log file """
+f = open(logFile, 'a+')
+f.write('>>> %s starting import\n' % (filePath))
+
+""" check if file exists """
+if not os.path.exists(filePath):
+  f.write('    file does not exist %s' % filePath)
+  sys.exit()
+
+""" check mime type """
+mime = magic.Magic(mime=True)
+mimeType = mime.from_file(filePath)
+if mimeType not in ['image/jpg','image/jpeg','image/tiff','image/png']:
+  f.write('    invalid mime type for %s of %s' % (filePath, mimeType))
+  sys.exit()
 
 """ user config """
 credentialConfig = ConfigParser.RawConfigParser()
@@ -25,10 +43,6 @@ gearmanConfig.read(gearmanFile)
 """ aws config """
 awsConfig = ConfigParser.RawConfigParser()
 awsConfig.read(awsFile)
-
-""" open log file """
-f = open(logFile, 'a+')
-f.write('>>> %s %s starting import\n' % (path, file))
 
 """ if the processed directory doesn't exist then we add it """
 processedDir = '%s/processed' % path
@@ -44,7 +58,7 @@ if credentialConfig.has_section('credentials'):
   s3Path = '%s/%s.jpg' % (path, binascii.hexlify(os.urandom(16)))
   k = Key(s3Bucket)
   k.key = s3Path
-  k.set_contents_from_filename('%s/%s' % (path, file))
+  k.set_contents_from_filename(filePath)
   k.set_acl('public-read')
 
   """ gearman client """
@@ -62,11 +76,11 @@ if credentialConfig.has_section('credentials'):
     }
 
   gearmanClient.submit_job("ImportToOpenPhotoWorker", json.dumps(workload), background=True)
-  os.rename('%s/%s' % (path, file), '%s/%s' % (processedDir, file))
-  f.write('    %s %s queueing up\n' % (path, file))
+  os.rename(filePath, '%s/%s' % (processedDir, file))
+  f.write('    %s queueing up\n' % (filePath))
 else:
-  f.write('    %s %s could not get credentials\n' % (path, file))
+  f.write('    %s could not get credentials\n' % (filePath))
 
 """ close the log file """
-f.write('<<< %s %s finished\n' % (path, file))
+f.write('<<< %s finished\n' % (filePath))
 f.close()
