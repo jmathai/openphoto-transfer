@@ -22,14 +22,14 @@ f.write('>>> %s starting import\n' % (filePath))
 
 """ check if file exists """
 if not os.path.exists(filePath):
-  f.write('    file does not exist %s' % filePath)
+  f.write('    file does not exist %s\n' % filePath)
   sys.exit()
 
 """ check mime type """
 mime = magic.Magic(mime=True)
 mimeType = mime.from_file(filePath)
 if mimeType not in ['image/jpg','image/jpeg','image/tiff','image/png']:
-  f.write('    invalid mime type for %s of %s' % (filePath, mimeType))
+  f.write('    invalid mime type for %s of %s\n' % (filePath, mimeType))
   sys.exit()
 
 """ user config """
